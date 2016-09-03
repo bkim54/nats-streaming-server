@@ -3625,3 +3625,27 @@ func TestFileStoreDontSendToOfflineDurablesOnRestart(t *testing.T) {
 		t.Fatal("Consumer got a message")
 	}
 }
+
+func TestIsValidSubjectWithSplit(t *testing.T) {
+	subject := ""
+	for i := 0; i < 100; i++ {
+		subject += "foo."
+	}
+	subject += "foo"
+	if !isValidSubject(subject) {
+		t.Fatalf("Subject %q should be valid", subject)
+	}
+	subjects := []string{
+		"foo.bar*",
+		"foo.bar>",
+		"foo.bar.*",
+		"foo.bar.>",
+		"foo*.bar",
+		"foo>.bar",
+	}
+	for _, s := range subjects {
+		if isValidSubject(s) {
+			t.Fatalf("Subject %q expected to be invalid", s)
+		}
+	}
+}
