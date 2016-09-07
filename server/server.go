@@ -118,9 +118,14 @@ func init() {
 	}
 }
 
+// ioPendingMsg is a record that embeds the pointer to the incoming
+// NATS Message, the PubMsg and PubAck structures so we reduce the
+// number of memory allocations to 1 when processing a message from
+// producer.
 type ioPendingMsg struct {
-	pm *pb.PubMsg
 	m  *nats.Msg
+	pm pb.PubMsg
+	pa pb.PubAck
 }
 
 // Constant that defines the size of the channel that feeds the IO thread.
@@ -1283,7 +1288,8 @@ func (s *StanServer) sendCloseErr(subj, err string) {
 
 // processClientPublish process inbound messages from clients.
 func (s *StanServer) processClientPublish(m *nats.Msg) {
-	pm := &pb.PubMsg{}
+	iopm := &ioPendingMsg{m: m}
+	pm := &iopm.pm
 	pm.Unmarshal(m.Data)
 
 	// TODO (cls) error check.
@@ -1295,8 +1301,7 @@ func (s *StanServer) processClientPublish(m *nats.Msg) {
 		return
 	}
 
-	// add the message to the IO channel for batching
-	s.addMessageToIOChannel(pm, m)
+	s.ioChannel <- iopm
 }
 
 func (s *StanServer) sendPublishErr(subj, guid string, err error) {
@@ -1669,7 +1674,7 @@ func (s *StanServer) storeIOLoop() {
 	var pendingMsgs = _pendingMsgs[:0]
 
 	storeIOPendingMsg := func(iopm *ioPendingMsg) {
-		cs, err := s.assignAndStore(iopm.pm)
+		cs, err := s.assignAndStore(&iopm.pm)
 		if err != nil {
 			Errorf("STAN: [Client:%s] Error processing message for subject %q: %v", iopm.pm.ClientID, iopm.m.Subject, err)
 			s.sendPublishErr(iopm.m.Reply, iopm.pm.Guid, err)
@@ -1746,7 +1751,7 @@ func (s *StanServer) storeIOLoop() {
 
 			// Ack our messages back to the publisher
 			for _, iopm := range pendingMsgs {
-				s.ackPublisher(iopm.pm, iopm.m.Reply)
+				s.ackPublisher(iopm)
 			}
 
 			// clear out pending messages and store map
@@ -1756,13 +1761,6 @@ func (s *StanServer) storeIOLoop() {
 			return
 		}
 	}
-}
-
-// addMessageToIOChannel passes the message to the IO go routine
-func (s *StanServer) addMessageToIOChannel(publishMsg *pb.PubMsg, natsMsg *nats.Msg) {
-	// TODO:  Pool/Preallocate here?
-	iopm := ioPendingMsg{pm: publishMsg, m: natsMsg}
-	s.ioChannel <- &iopm
 }
 
 // assignAndStore will assign a sequence ID and then store the message.
@@ -1778,15 +1776,17 @@ func (s *StanServer) assignAndStore(pm *pb.PubMsg) (*stores.ChannelStore, error)
 }
 
 // ackPublisher sends the ack for a message.
-func (s *StanServer) ackPublisher(pm *pb.PubMsg, reply string) {
-	msgAck := &pb.PubAck{Guid: pm.Guid}
+func (s *StanServer) ackPublisher(iopm *ioPendingMsg) {
+	msgAck := &iopm.pa
+	msgAck.Guid = iopm.pm.Guid
 	var buf [32]byte
 	b := buf[:]
 	n, _ := msgAck.MarshalTo(b)
 	if s.trace {
+		pm := &iopm.pm
 		Tracef("STAN: [Client:%s] Acking Publisher subj=%s guid=%s", pm.ClientID, pm.Subject, pm.Guid)
 	}
-	s.nc.Publish(reply, b[:n])
+	s.nc.Publish(iopm.m.Reply, b[:n])
 }
 
 // Delete a sub from a given list.
