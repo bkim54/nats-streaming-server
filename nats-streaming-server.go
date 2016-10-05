@@ -14,6 +14,7 @@ import (
 	natsd "github.com/nats-io/gnatsd/server"
 	stand "github.com/nats-io/nats-streaming-server/server"
 	"github.com/nats-io/nats-streaming-server/stores"
+	"net"
 )
 
 var usageStr = `
@@ -88,13 +89,28 @@ func usage() {
 }
 
 func main() {
-
 	// Parse flags
 	sOpts, nOpts := parseFlags()
 	// override the NoSigs for NATS since we have our own signal handler below
 	nOpts.NoSigs = true
 	stand.ConfigureLogger(sOpts, nOpts)
-	s := stand.RunServerWithOpts(sOpts, nOpts)
+	var s *stand.StanServer = stand.RunServerWithOpts(sOpts, nOpts)
+
+
+
+	//stores.Noticef("wtf");
+	//
+	////make a channel that
+	////go func() {
+	////	c:
+	////}
+	//
+	//ln, _ := net.Listen("tcp", ":8081");
+	////conn, _ := ln.Accept()
+	//fmt.Print(s.stores)
+	////conn.Write()
+	//fmt.Print(ln.Addr());
+
 	c := make(chan os.Signal, 1)
 	signal.Notify(c, os.Interrupt)
 	go func() {
