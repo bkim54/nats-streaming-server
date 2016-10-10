@@ -4,7 +4,7 @@ package stores
 
 import (
 	"github.com/nats-io/go-nats-streaming/pb"
-	"github.com/nats-io/nats-streaming-server/spb"
+	"github.com/bkim54/nats-streaming-server/spb"
 	"hash/crc32"
 	"math/rand"
 	"os"

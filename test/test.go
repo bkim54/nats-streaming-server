@@ -3,7 +3,7 @@
 package test
 
 import (
-	"github.com/nats-io/nats-streaming-server/server"
+	"github.com/bkim54/nats-streaming-server/server"
 )
 
 // RunServer launches a server with the specified ID and default options.

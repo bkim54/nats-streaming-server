@@ -19,7 +19,7 @@ import (
 	"github.com/nats-io/go-nats-streaming"
 	"github.com/nats-io/go-nats-streaming/pb"
 	"github.com/nats-io/nats"
-	"github.com/nats-io/nats-streaming-server/stores"
+	"github.com/bkim54/nats-streaming-server/stores"
 )
 
 const (

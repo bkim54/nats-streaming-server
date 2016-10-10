@@ -8,7 +8,7 @@ import (
 
 	"github.com/nats-io/gnatsd/server"
 	"github.com/nats-io/go-nats-streaming/pb"
-	"github.com/nats-io/nats-streaming-server/spb"
+	"github.com/bkim54/nats-streaming-server/spb"
 )
 
 const (
@@ -152,6 +152,9 @@ type Store interface {
 
 	// Close closes all stores.
 	Close() error
+
+	//Delete Channel
+	DeleteChannel(name string) bool
 }
 
 // SubStore is the interface for storage of Subscriptions on a given channel.

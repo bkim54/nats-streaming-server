@@ -29,3 +29,9 @@ _testmain.go
 
 # MS Visual Code
 .vscode/
+
+# Intellij shit
+.idea/
+
+# Dir for filestore
+server-store/

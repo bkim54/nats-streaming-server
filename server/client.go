@@ -3,7 +3,7 @@
 package server
 
 import (
-	"github.com/nats-io/nats-streaming-server/stores"
+	"github.com/bkim54/nats-streaming-server/stores"
 	"sync"
 	"time"
 )

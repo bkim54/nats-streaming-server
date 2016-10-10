@@ -20,7 +20,7 @@ import (
 // any state present.
 // If not limits are provided, the store will be created with
 // DefaultChannelLimits.
-func ReadFileStore(rootDir string, limits *ChannelLimits, options ...FileStoreOption) (*FileStore, *RecoveredState, error) {
+func ReadFileStore(rootDir string, limits *ChannelLimits) (*FileStore, *RecoveredState, error) {
 	fs := &FileStore{
 		rootDir: rootDir,
 		opts:    DefaultFileStoreOptions,
@@ -28,11 +28,11 @@ func ReadFileStore(rootDir string, limits *ChannelLimits, options ...FileStoreOp
 
 	fs.init(TypeFile, limits)
 
-	for _, opt := range options {
-		if err := opt(&fs.opts); err != nil {
-			return nil, nil, err
-		}
-	}
+	//for _, opt := range options {
+	//	if err := opt(&fs.opts); err != nil {
+	//		return nil, nil, err
+	//	}
+	//}
 
 	// Convert the compact interval in time.Duration
 	fs.compactItvl = time.Duration(fs.opts.CompactInterval) * time.Second
@@ -48,13 +48,13 @@ func ReadFileStore(rootDir string, limits *ChannelLimits, options ...FileStoreOp
 	}
 
 	var err error
-	var recoveredState *RecoveredState
+	//var recoveredState *RecoveredState
 	var serverInfo *spb.ServerInfo
-	var recoveredClients []*Client
-	var recoveredSubs = make(RecoveredSubscriptions)
-	var channels []os.FileInfo
-	var msgStore *FileMsgStore
-	var subStore *FileSubStore
+	//var recoveredClients []*Client
+	//var recoveredSubs = make(RecoveredSubscriptions)
+	//var channels []os.FileInfo
+	//var msgStore *FileMsgStore
+	//var subStore *FileSubStore
 
 	// Ensure store is closed in case of return with error
 	defer func() {

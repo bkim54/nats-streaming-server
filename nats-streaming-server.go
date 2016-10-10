@@ -12,14 +12,13 @@ import (
 	"fmt"
 
 	natsd "github.com/nats-io/gnatsd/server"
-	stand "github.com/nats-io/nats-streaming-server/server"
-	"github.com/nats-io/nats-streaming-server/stores"
-	"net"
+	stand "github.com/bkim54/nats-streaming-server/server"
+	"github.com/bkim54/nats-streaming-server/stores"
+	"bufio"
 )
 
 var usageStr = `
 Usage: nats-streaming-server [options]
-
 Streaming Server Options:
     -cid, --cluster_id  <cluster ID> Cluster ID (default: test-cluster)
     -st,  --store <type>             Store type: MEMORY|FILE (default: MEMORY)
@@ -29,20 +28,17 @@ Streaming Server Options:
     -mm,  --max_msgs <number>        Max number of messages per channel
     -mb,  --max_bytes <number>       Max messages total size per channel
     -ns,  --nats_server <url>        Connect to this external NATS Server (embedded otherwise)
-
 Streaming Server TLS Options:
     -secure                          Use a TLS connection to the NATS server without
                                      verification; weaker than specifying certificates.
     -tls_client_key                  Client key for the streaming server
     -tls_client_cert                 Client certificate for the streaming server
     -tls_client_cacert               Client certificate CA for the streaming server
-
 Streaming Server Logging Options:
     -SD, --stan_debug                Enable STAN debugging output
     -SV, --stan_trace                Trace the raw STAN protocol
     -SDV                             Debug and trace STAN
     (See additional NATS logging options below)
-
 Embedded NATS Server Options:
     -a, --addr <host>                Bind to host address (default: 0.0.0.0)
     -p, --port <port>                Use port for clients (default: 4222)
@@ -50,7 +46,6 @@ Embedded NATS Server Options:
     -m, --http_port <port>           Use port for http monitoring
     -ms,--https_port <port>          Use port for https monitoring
     -c, --config <file>              Configuration file
-
 Logging Options:
     -l, --log <file>                 File to redirect log output
     -T, --logtime                    Timestamp log entries (default: true)
@@ -59,23 +54,19 @@ Logging Options:
     -D, --debug                      Enable debugging output
     -V, --trace                      Trace the raw protocol
     -DV                              Debug and trace
-
 Authorization Options:
         --user <user>                User required for connections
         --pass <password>            Password required for connections
         --auth <token>               Authorization token required for connections
-
 TLS Options:
         --tls                        Enable TLS, do not verify clients (default: false)
         --tlscert <file>             Server certificate file
         --tlskey <file>              Private key for server certificate
         --tlsverify                  Enable TLS, very client certificates
         --tlscacert <file>           Client certificate CA for verification
-
 NATS Clustering Options:
         --routes <rurl-1, rurl-2>    Routes to solicit and connect
         --cluster <cluster-url>      Cluster URL for solicited routes
-
 Common Options:
     -h, --help                       Show this message
     -v, --version                    Show version
@@ -89,34 +80,61 @@ func usage() {
 }
 
 func main() {
+
 	// Parse flags
 	sOpts, nOpts := parseFlags()
 	// override the NoSigs for NATS since we have our own signal handler below
 	nOpts.NoSigs = true
 	stand.ConfigureLogger(sOpts, nOpts)
-	var s *stand.StanServer = stand.RunServerWithOpts(sOpts, nOpts)
-
-
-
-	//stores.Noticef("wtf");
-	//
-	////make a channel that
-	////go func() {
-	////	c:
-	////}
-	//
-	//ln, _ := net.Listen("tcp", ":8081");
-	////conn, _ := ln.Accept()
-	//fmt.Print(s.stores)
-	////conn.Write()
-	//fmt.Print(ln.Addr());
-
+	s := stand.RunServerWithOpts(sOpts, nOpts)
 	c := make(chan os.Signal, 1)
 	signal.Notify(c, os.Interrupt)
+
 	go func() {
 		<-c
 		s.Shutdown()
 		os.Exit(0)
+	}()
+
+
+	// a channel to tell it to stop
+	//stopchan := make(chan os.Signal, 1)
+	//signal.Notify(stopchan, os.Interrupt)
+	//
+	//// a channel to signal that it's stopped
+	//stoppedchan := make(chan struct{})
+
+	go func(){ // work in background
+		// close the stoppedchan when this func
+		// exits
+		//defer close(stoppedchan)
+		// TODO: do setup work
+
+		for {
+			select {
+			default:
+				reader := bufio.NewReader(os.Stdin)
+				fmt.Println("Simple Shell")
+				fmt.Println("---------------------")
+
+				for {
+					fmt.Print("-> ")
+					text, _ := reader.ReadString('\n')
+					input := strings.Fields(text);
+					if (input[0] == "stop") {
+						os.Exit(0)
+					} else if (input[0] == "delete") {
+						fmt.Println(input[1])
+						s.DeleteChannel(input[1]);
+					}
+
+
+				}
+			//case <-stopchan:
+			//// stop
+			//	return
+			}
+		}
 	}()
 
 	runtime.Goexit()

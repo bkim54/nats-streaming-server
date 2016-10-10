@@ -15,8 +15,8 @@ import (
 	"time"
 
 	"github.com/nats-io/go-nats-streaming/pb"
-	"github.com/nats-io/nats-streaming-server/spb"
-	"github.com/nats-io/nats-streaming-server/util"
+	"github.com/bkim54/nats-streaming-server/spb"
+	"github.com/bkim54/nats-streaming-server/util"
 )
 
 var testDefaultServerInfo = spb.ServerInfo{

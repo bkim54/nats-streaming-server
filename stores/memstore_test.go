@@ -3,7 +3,7 @@
 package stores
 
 import (
-	"github.com/nats-io/nats-streaming-server/spb"
+	"github.com/bkim54/nats-streaming-server/spb"
 	"reflect"
 	"testing"
 )

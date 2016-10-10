@@ -7,7 +7,7 @@ import (
 	"sync"
 
 	"github.com/nats-io/go-nats-streaming/pb"
-	"github.com/nats-io/nats-streaming-server/spb"
+	"github.com/bkim54/nats-streaming-server/spb"
 )
 
 // format string used to report that limit is reached when storing

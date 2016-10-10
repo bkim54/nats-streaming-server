@@ -19,8 +19,8 @@ import (
 	natsd "github.com/nats-io/gnatsd/test"
 	"github.com/nats-io/go-nats-streaming/pb"
 	"github.com/nats-io/nats"
-	"github.com/nats-io/nats-streaming-server/spb"
-	stores "github.com/nats-io/nats-streaming-server/stores"
+	"github.com/bkim54/nats-streaming-server/spb"
+	stores "github.com/bkim54/nats-streaming-server/stores"
 	"github.com/nats-io/nuid"
 )
 
@@ -714,8 +714,9 @@ func RunServerWithOpts(stanOpts *Options, natsOpts *server.Options) *StanServer 
 			panic(r)
 		}
 	}()
-
+	Noticef("BLARGHASDKASFLJFDHSFLJ")
 	if recoveredState != nil {
+		Noticef("recovering stuff");
 		// Copy content
 		s.info = *recoveredState.Info
 		// Check cluster IDs match
